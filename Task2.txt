@@ -1,0 +1,84 @@
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.util.List;
+
+public class TransactionParser {
+
+    public static void main(String[] args) {
+        WebDriver driver = setupWebDriver();
+
+        try {
+            driver.get("https://blockstream.info/block/000000000000000000076c036ff5119e5a5a74df77abf64203473364509f7732");
+
+            List<WebElement> transactions = getVisibleTransactions(driver);
+            parseAndPrintTransactions(driver, transactions);
+
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            driver.quit();
+        }
+    }
+
+    // Method to set up WebDriver
+private static WebDriver setupWebDriver() {
+    WebDriverManager.chromedriver().setup();
+    ChromeOptions options = new ChromeOptions();
+    options.addArguments("--headless"); // Run browser in headless mode
+    options.addArguments("--no-sandbox");
+    options.addArguments("--disable-dev-shm-usage");
+    return new ChromeDriver(options);
+}
+
+    // Method to fetch the list of 25 visible transactions
+    private static List<WebElement> getVisibleTransactions(WebDriver driver) {
+        WebDriverWait wait = new WebDriverWait(driver, 10);
+        
+        // Wait for the transaction list section to be visible
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+            By.xpath("//div[contains(@class, 'transaction-list')]"))
+        );
+
+        // Find and return all visible transactions (first 25)
+        return driver.findElements(By.xpath("//div[contains(@class, 'transaction-list')]//div[contains(@class, 'transaction')]"));
+    }
+
+    // Method to parse each transaction and print hashes with 1 input and 2 outputs
+    private static void parseAndPrintTransactions(WebDriver driver, List<WebElement> transactions) {
+        for (WebElement transaction : transactions) {
+            try {
+                String transactionHash = transaction.findElement(By.xpath(".//span[contains(@class, 'transaction-id')]")).getText();
+                
+                // Fetch the input and output count for the transaction
+                int inputCount = getTransactionInputCount(transaction);
+                int outputCount = getTransactionOutputCount(transaction);
+                
+                // Check if transaction has exactly 1 input and 2 outputs
+                if (inputCount == 1 && outputCount == 2) {
+                    System.out.println("Transaction Hash with 1 input and 2 outputs: " + transactionHash);
+                }
+                
+            } catch (Exception e) {
+                System.out.println("Error processing transaction: " + e.getMessage());
+            }
+        }
+    }
+
+    // Method to get input count for a transaction
+    private static int getTransactionInputCount(WebElement transaction) {
+        String inputText = transaction.findElement(By.xpath(".//span[contains(@class, 'input-count')]")).getText();
+        return Integer.parseInt(inputText);  // Convert input count text to integer
+    }
+
+    // Method to get output count for a transaction
+    private static int getTransactionOutputCount(WebElement transaction) {
+        String outputText = transaction.findElement(By.xpath(".//span[contains(@class, 'output-count')]")).getText();
+        return Integer.parseInt(outputText);  // Convert output count text to integer
+    }
+}

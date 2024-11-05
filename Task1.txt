@@ -1,0 +1,62 @@
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class TransactionHeadingAndValueTest {
+    public static void main(String[] args) {
+        // Set up WebDriver (Chrome example)
+        WebDriverManager.chromedriver().setup();
+        WebDriver driver = new ChromeDriver();
+        
+        try {
+            // Open the URL
+            driver.get("https://blockstream.info/block/000000000000000000076c036ff5119e5a5a74df77abf64203473364509f7732");
+
+            // Wait for the transaction list section heading to load
+            WebDriverWait wait = new WebDriverWait(driver, 10);
+            WebElement transactionHeading = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//div[contains(@class, 'transaction-list')]//h2"))
+            );
+
+            // Validate the heading text
+            String expectedHeadingText = "25 of 2875 Transactions";
+            String actualHeadingText = transactionHeading.getText();
+
+            if (actualHeadingText.equals(expectedHeadingText)) {
+                System.out.println("Test Passed: The heading is correctly displayed.");
+            } else {
+                System.out.println("Test Failed: Expected heading '" + expectedHeadingText + "' but got '" + actualHeadingText + "'");
+            }
+
+            // Locate the first transaction in the list
+            WebElement firstTransaction = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//div[contains(@class, 'transaction-list')]//div[contains(@class, 'transaction')]"))
+            );
+
+            // Validate two specific values in the transaction (example fields)
+            WebElement transactionId = firstTransaction.findElement(By.xpath(".//span[contains(@class, 'transaction-id')]"));
+            WebElement transactionValue = firstTransaction.findElement(By.xpath(".//span[contains(@class, 'transaction-value')]"));
+
+            String expectedTransactionId = "expectedTransactionId"; // replace with expected ID value
+            String expectedTransactionValue = "expectedTransactionValue"; // replace with expected value
+
+            if (transactionId.getText().equals(expectedTransactionId) && transactionValue.getText().equals(expectedTransactionValue)) {
+                System.out.println("Test Passed: Transaction ID and Value are as expected.");
+            } else {
+                System.out.println("Test Failed: Expected Transaction ID '" + expectedTransactionId + "' and Value '" 
+                                   + expectedTransactionValue + "' but got ID '" 
+                                   + transactionId.getText() + "' and Value '" 
+                                   + transactionValue.getText() + "'");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Test Failed due to exception: " + e.getMessage());
+        } finally {
+            // Close the WebDriver
+            driver.quit();
+        }
+    }
+}
